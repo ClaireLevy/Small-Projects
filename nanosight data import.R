@@ -66,6 +66,15 @@ datEdit<-dat%>%
   select(FullName,Nanosight_Date,PTID,F_or_S, Protocol_Step,
          Dilution,Measurement,Captures, Average, StdError,
          Calculated_Sample_Concentration)
+
+
+
+
+names(datEdit)[c(1,9)]<-c("File_Name","Average_Concentration")
+
+
+write.csv(datEdit, "J:/MacLabUsers/HLADIK SHARED/Projects/Exosomes/Tewari U01 project/Compiled Tewari Nanosight Data.csv")
+
 ## CHECK #####         
 #I'm pretty sure that the entry for PTID 2246 should actually be
 #for 2446 since that is what is written in my manual sample log
@@ -74,9 +83,5 @@ datEdit<-dat%>%
 
 #I am adding a column clarifying how many measurements were taken
 #for each standard
-
-x<-mutate(Captures = ifelse(
-  str_detect(Measurement,"standard(1|2)")==TRUE, "3","5")
-)
 
 
