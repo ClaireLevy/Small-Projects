@@ -1,3 +1,6 @@
+Stacked bar
+-----------
+
 CD66b+ populations from "plotting neutrophil subsets flow and April-May CyToF" in the GAPPS-analysis project
 
 ``` r
@@ -14,6 +17,9 @@ ggplot(meltCombinedData, aes(x=Sample, y = CD66bPos))+
 ```
 
 ![](Plot_gallery_files/figure-markdown_github/unnamed-chunk-2-1.png)
+
+Stacked bar with pretty colors
+------------------------------
 
 Populations found using testing CyToF with PBMC and vaginal cells from "30Apr15 CyTOF data.R" in GAPPS-analysis project
 
@@ -34,6 +40,9 @@ cell samples")
 
 ![](Plot_gallery_files/figure-markdown_github/unnamed-chunk-4-1.png)
 
+Lotsa dots plus custom error bars
+---------------------------------
+
 qPCR results showing all donors and mean + se. From: J:SHAREDstudy-Project-1-qPCRresults.Rmd
 
 The black vertical lines are showing the range of the SE on either side of the mean. This is done using the following:
@@ -47,10 +56,6 @@ The black horizontal lines are actually a "+" symbol at the mean. This is done u
 To customize the x and y axis labels I used:
 
 `labs(y = "Fold Change relative to CT of 40 \n (log 10 scale)", x = "Time (hrs)")`
-
-``` r
-load("Plot gallery data/explantAnalysis.Rda")
-```
 
 ``` r
 ggplot(explantAnalysis,(aes(x = Time, y = log10(FoldChange))))+
@@ -69,21 +74,16 @@ labs(y = "Fold Change relative to CT of 40 \n (log 10 scale)", x = "Time (hrs)")
 
 ![](Plot_gallery_files/figure-markdown_github/unnamed-chunk-6-1.png)
 
+Dots with scientific notation using scales package
+--------------------------------------------------
+
 Results of infecting TZM-bl cells with HIV (Bal) in the presence of different amounts of seminal exosomes per pfu. Plot is from the "TZM-bl\_infection\_assay\_001\_003\_004" script.
 
 Note that you need to call `library(scales)` in order to use `scale_y_continuous(labels = scientific)`
 
 ``` r
-load("Plot gallery data/dat003Bal3xCntl.Rda")
-```
-
-``` r
 library(scales)
-```
 
-    ## Warning: package 'scales' was built under R version 3.1.3
-
-``` r
 ggplot(dat003Bal3xCntl,aes(x = Condition, y = RLU))+ scale_y_continuous(labels = scientific)+
 geom_point(aes(), size = 3)+
 ggtitle("Bal data: only reps 3x avg Cells Only control")

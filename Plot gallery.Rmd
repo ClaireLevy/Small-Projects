@@ -6,7 +6,7 @@ output:
   md_document:
     variant: markdown_github
 ---
-
+## Stacked bar
 
 CD66b+ populations from "plotting neutrophil subsets flow and April-May CyToF" in the GAPPS-analysis project
 
@@ -29,6 +29,7 @@ ggplot(meltCombinedData, aes(x=Sample, y = CD66bPos))+
     ggtitle("Frequency of CD66b+ sub-populations")
 ```
 
+## Stacked bar with pretty colors
 
 Populations found using testing CyToF with PBMC and vaginal cells from "30Apr15 CyTOF data.R" in GAPPS-analysis project
 
@@ -55,6 +56,8 @@ cell samples")
 
 ```
 
+## Lotsa dots plus custom error bars
+
 qPCR results showing all donors and mean + se. 
 From: J:\MacLabUsers\HLADIK SHARED\Projects\Herpes study\Herpes-Project-1-qPCR\qPCR results.Rmd
 
@@ -70,7 +73,7 @@ To customize the x and y axis labels I used:
 
 ` labs(y = "Fold Change relative to CT of 40 \n (log 10 scale)", x = "Time (hrs)")`
 
-```{r}
+```{r, echo = FALSE}
 
 load("Plot gallery data/explantAnalysis.Rda")
 ```
@@ -91,6 +94,7 @@ facet_wrap(~ Treatment)+
 labs(y = "Fold Change relative to CT of 40 \n (log 10 scale)", x = "Time (hrs)")
 ```
 
+## Dots with scientific notation using scales package
 
 Results of infecting TZM-bl cells with HIV (Bal) in the presence of different amounts of seminal exosomes per pfu. Plot is from the "TZM-bl_infection_assay_001_003_004" script.
 
@@ -98,7 +102,7 @@ Note that you need to call `library(scales)` in order to use `scale_y_continuous
 
 
 
-```{r}
+```{r, echo= FALSE, warning=FALSE, message= FALSE}
 load("Plot gallery data/dat003Bal3xCntl.Rda")
 
 ```
