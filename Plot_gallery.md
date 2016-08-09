@@ -1,3 +1,8 @@
+Plot gallery
+================
+Claire Levy
+March 22, 2016
+
 Stacked bar
 -----------
 
@@ -90,3 +95,21 @@ ggtitle("Bal data: only reps 3x avg Cells Only control")
 ```
 
 ![](Plot_gallery_files/figure-markdown_github/unnamed-chunk-8-1.png)
+
+Using `interaction()` to make `geom_line()` between points that share another aesthetic (color)
+-----------------------------------------------------------------------------------------------
+
+I wanted to plot the multiple data sets from each experiment in the same color, but also wanted geom\_line to connect unique instances of virus + experiment, not all the points from one experiment.
+
+I used r`scale_shape_manual()` to make all the "No virus" conditions the same shape, even though they had different names.
+
+``` r
+ggplot(Bal26, aes(x = Day, y = RLU))+
+  geom_point(aes(color = Experiment, shape = Virus),size = 3)+
+  geom_line(aes(group = interaction(Experiment,Virus), color = Experiment))+
+  scale_y_log10()+
+  scale_shape_manual(values = c("Bal26 lot1" = 1, "No virus" = 4, "No virus1" = 4, "No virus2" = 4 ))+
+  ggtitle("Bal26 lot 1 and No virus controls")
+```
+
+![](Plot_gallery_files/figure-markdown_github/unnamed-chunk-10-1.png)
