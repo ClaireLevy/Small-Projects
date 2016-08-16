@@ -109,7 +109,7 @@ ggplot(Bal26, aes(x = Day, y = RLU))+
   geom_line(aes(group = interaction(Experiment,Virus), color = Experiment))+
   scale_y_log10()+
   scale_shape_manual(values = c("Bal26 lot1" = 1, "No virus" = 4, "No virus1" = 4, "No virus2" = 4 ))+
-  ggtitle("Bal26 lot 1 and No virus controls")
+  ggtitle("Bal26 lot 1 and No virus cntls")
 ```
 
 ![](Plot_gallery_files/figure-markdown_github/unnamed-chunk-10-1.png)
