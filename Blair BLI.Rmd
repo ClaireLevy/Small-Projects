@@ -6,92 +6,98 @@ output: html_document
 ---
 
 
-
-
-```{r reading in the data, message = FALSE, warning = FALSE}
-
-
-
-library(readxl)
+```{r read in RAW, message = FALSE, warning = FALSE}
 library(stringr)
 library(dplyr)
 library(ggplot2)
 library(reshape2)
 
 
-#Reading in the individual assoc and dissoc files
+#I took the original .xls file, shifted over all the column headers by one and called the first column header "Time" and then saved it as a .csv
+
+#.csv read in WAY faster than the .xls
+rawDat<-read.csv("Blair_data\\RawData0_edit.csv")
+
+anyNA(rawDat)
+
+which(is.na(rawDat))
 
 
-folder <- "Blair_data"
+#just take the rows with obs in them??
+r<-rawDat[1:4648,]
 
-files <- list.files(folder, pattern = ".xls")
+anyNA(r)#still true...
+sum(is.na(r))#there are still 16 rows with NAs
 
-filesPaths<-paste(folder, "\\", files, sep = "")
+r[which(is.na(r)),]
 
-datList <- lapply(filesPaths, read_excel, skip = 4)
+s<- na.omit(rawDat) #this removed 1 row (1 less obs than r)
 
-names(datList)<- str_replace(files,pattern = ".xls", replacement = "")
+s[which(is.na(s)),]
+
+anyNA(s)#now False
+
+t<-na.omit(rawDat)#this also removes 1 row
+
+anyNA(t)
+
+#I only want the data from the rows where Time is >= 330 
+
+
+rawDatShort <- rawDat %>%
+  filter(Time >= 330.0)
+
+
+#check for NA's
+
+withNA<-rawDatShort[which(is.na(rawDatShort)),]
+
+#For all the cols with no header (Time columns), R has called them X, X.1, X.2 etc. This is ok, we can identify and remove them since there is no column that we WANT called X. The other columns (A1 etc) are shift data describing combinations of Ab/Env, which we want to keep.
+
+# Melt the data:
+#Keep the Time column, melt all the other columns so  what started as column names are now rows in a column called Sensor.Location (this matches what the corresponding column in the key is called)and the shift data is in a single column called shift.
+
+meltRaw<- melt(rawDatShort, id.vars = "Time", variable.name = "Sensor.Location", value.name = "Shift")
+
+
+#All the rows with X in the Sensor.Location column are actually repeated time data that we dont want, so I'm removing them:
+
+#I am re-factoring here too the X's don't show up anymore when I look at the levels.
+
+meltRawClean <- meltRaw %>%
+  filter(!str_detect(Sensor.Location, "X"))%>%
+  mutate(Sensor.Location = factor(Sensor.Location))
 ```
 
 
-
-```{r combining all files, message = FALSE, warning = FALSE}
-#go from a list to single df with a column id-ing data from each individual file.
-
-dat <- bind_rows(datList, .id = "Sensor.Location")
-
-#get rid of the column we don't care about and change the colnames
-dat<- dat %>%
-  select(- Sim1)
-
-names(dat)[2:3]<-c("Time","Shift")
-```
-
-
-```{r add in the key, message = FALSE, warning = FALSE}
-#read in the  key explaining what env and Ab were combinded to get the readout in dat.
+```{r add key, message = FALSE, warning = FALSE}
+#read in the  key explaining what env and Ab were combined to get the readout in the raw data.
 key<- read.csv("Blair_data/key.csv")
 
 
-#We only care about some of the columns. 
-#Sensor.Location corresponds to the column in dat of the same name
+#We only care about some of the columns.
+#Sensor.Location corresponds to the column in the melted raw data of the same name. This is an indentifier for a Env/Ab combination.
 #Sample.ID is the env
 #Loading Sample Id is the Ab
 
 key <- key %>%
   select(Sensor.Location,Sample.ID,Loading.Sample.ID)
 
-
-keyAndDat<-merge(key, dat, by = "Sensor.Location")
-
-
-
-keyAndDat<-keyAndDat %>%
-  arrange(Sensor.Location, Time)
-
-#For unknown reasons, Time column for the control data has times rounded to 1 decimel point while the exp data rounds to 2. I am rounding all to 1 decimel place here so they all match.
-
-keyAndDat$Time <- round(keyAndDat$Time, digits = 1)
-
-#I want the times to start at zero, not at 300-whatever, so I'm going to make a column of adjusted times that starts at zero by subtracting the lowest value in the Time column from all of the times.
-
-
-
-keyAndDat <- keyAndDat %>%
-  mutate(AdjTime = Time - min(Time))
-
+#merge the key and the melted data by the Ab/Env combination identifier ("Sensor Location")
+keyAndMelted<-merge(key, meltRawClean, by = "Sensor.Location")
 
 ```
+
 
 ```{r extract the control data, message = FALSE, warning = FALSE}
 
 #Put the control data in its own df.
-control<- keyAndDat %>%
+control<- keyAndMelted %>%
   filter(str_detect(Loading.Sample.ID,"control"))
 
 #Remove the control data from the experimental data
 
-keyAndDatNoControl <- keyAndDat %>%
+keyAndMeltedNoControl <- keyAndMelted %>%
   filter(!str_detect(Loading.Sample.ID,"control"))
 ```
 
@@ -108,11 +114,11 @@ keyAndDatNoControl <- keyAndDat %>%
 # Example: For any row of experimental data with "A" in Sensor Location, subtract the control shift value from the control data with "A" in the sensor location and a matching time. There is only one row of control data with "A". 
 
 
-#Plan to do what it says above:
+#How to do what it says above:
 
-# Make a new column in both the control and keyAndDatNoControl dataframes that indicates the letter part of the "Sensor location"
+# Make a new column in both the control and keyAndMeltedNoControl dataframes that indicates the letter part of the "Sensor location." Call it "SensorLocLetter"
 
-#Merge the two data frames based on the SensorLocLetter column AND the Time column. This cause each  experimental data point AND its corresponding control data point to be in the same row.
+#Merge the two data frames based on the SensorLocLetter column AND the Time column. This causes each  experimental data point AND its corresponding control data point to be in the same row.
 
 #Make a new column that is the difference between the experimental shift column and the control shift column.
 
@@ -124,20 +130,20 @@ control <- control %>%
 
 #repeat with experimental data:
 
-keyAndDatNoControl<-keyAndDatNoControl %>%
+keyAndMeltedNoControl<-keyAndMeltedNoControl %>%
     mutate(SensorLocLetter = str_extract(Sensor.Location, "[A-Z]"))
 
 
-#Merge on SensorLocLetter and AdjTime
+#Merge on SensorLocLetter and Time
 #all.x and all.y = true will add rows with NAs for any instances where there were non-matches
 
-mergeExpAndCntl<- merge(keyAndDatNoControl, control, by = c("SensorLocLetter", "Time"), all.x = TRUE, all.y = TRUE)
+mergeExpAndCntl<- merge(keyAndMeltedNoControl, control, by = c("SensorLocLetter", "Time"), all.x = TRUE, all.y = TRUE)
 
 
 #Check for NA's
 anyNA(mergeExpAndCntl)
 
-#This is true because I got all the control data but only got exp data for A B and C so there won't be exp matches for the controls for D-H.
+
 
 #Change the column names so they make more sense
 
@@ -147,33 +153,27 @@ colnames(mergeExpAndCntl)<-
   str_replace(colnames(mergeExpAndCntl),".y",".Cntl")
 
 
-# We only need 1 column for AdjTime, rename the Exp one to just AdjTime and remove the control one
-
-names(mergeExpAndCntl)[7]<-"AdjTime"
-
-
+#do the subtraction and add an adjusted time column(so the lowest value is zero, not 300 or whatever it is now)
 mergeExpAndCntl <- mergeExpAndCntl %>%
-  select(-AdjTime.Cntl)%>%
-  mutate(CorrectedShift = Shift.Exp - Shift.Cntl)
+  mutate(CorrectedShift = Shift.Exp - Shift.Cntl)%>%
+  mutate(AdjTime = Time - min(Time))
+
+
+
+withNA<- mergeExpAndCntl[which(is.na(mergeExpAndCntl)),]
+
+
 
 #plotting
 #the plots Blair made in Prism show time vs shift with different colored lines for each Env ("Sample ID"). She made different plots for each Ab ("Loading Sample ID"")
 
 
-
+ggplot(mergeExpAndCntl, aes(x = AdjTime, y = CorrectedShift ))+
+  geom_line(aes(group = Sample.ID.Exp, color = Sample.ID.Exp))+
+  facet_wrap(~Loading.Sample.ID.Exp, scales = "free_y")+
+  labs(x = "Time", y = "Background Corrected Shift")+
+  scale_color_discrete(name = "Envelope")
 ```
 
-
-```{r read in RAW, message = FALSE, warning = FALSE}
-
-#I took the original .xls file, shifted over all the column headers by one and called the first column header "Time" and then saved it as a .csv
-
-#.csv read in WAY faster than the .xls
-
-
-rawDat<-read.csv("Blair_data\\RawData0_edit.csv")
-
-
-meltRaw<- melt(rawDat, id.vars = "Time", variable.name = "Sensor.Location", value.name = "Shift")
 
 
