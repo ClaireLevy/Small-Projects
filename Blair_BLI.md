@@ -1,14 +1,4 @@
----
-title: "BLI"
-author: "Claire Levy"
-date: "September 12, 2016"
-output:
-  md_document:
-    variant: markdown_github
----
-
-
-```{r read in RAW, message = FALSE, warning = FALSE}
+``` r
 library(stringr)
 library(dplyr)
 library(ggplot2)
@@ -42,10 +32,7 @@ names(dat)[2:3]<-c("Time","Shift")
 #sanity check: shold have 8 letters x 7 reps/letter x 3000 entries = 168000 rows.
 ```
 
-
-
-
-```{r add key, message = FALSE, warning = FALSE}
+``` r
 #read in the  key explaining what env and Ab were combined to get the readout in the raw data.
 key<- read.csv("Blair_data/key.csv")
 
@@ -72,12 +59,9 @@ keyAndDat$Time <- round(keyAndDat$Time, digits = 1)
 
 keyAndDat <- keyAndDat %>%
   mutate(AdjTime = Time - min(Time))
-
 ```
 
-
-```{r extract the control data, message = FALSE, warning = FALSE}
-
+``` r
 #Put the control data in its own df.
 control<- keyAndDat %>%
   filter(str_detect(Loading.Sample.ID,"control"))
@@ -88,12 +72,7 @@ keyAndDatNoControl <- keyAndDat %>%
   filter(!str_detect(Loading.Sample.ID,"control"))
 ```
 
-
-
-
-```{r background subtraction, message = FALSE, warning = FALSE}
-
-
+``` r
 #We want to substract the background control shift values from the corresponding experimental shift values.
 
 #Corresponding control and experimental data share the same letter in the "Sensor Location" column and the same time in the Time column. 
@@ -153,14 +132,6 @@ ggplot(mergeExpAndCntl, aes(x = AdjTime.Exp , y = CorrectedShift ))+
   facet_wrap(~Loading.Sample.ID.Exp, scales = "free_y")+
   labs(x = "Time", y = "Background Corrected Shift")+
   scale_color_discrete(name = "Envelope")
-
-
-
-
-
-
-  
 ```
 
-
-
+![](Blair_BLI_files/figure-markdown_github/background%20subtraction-1.png)
