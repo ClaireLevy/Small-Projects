@@ -12,8 +12,8 @@ output:
 library(stringr)
 library(dplyr)
 library(ggplot2)
-library(reshape2)
-library(readxl)
+library(tidyr)
+
 
 
 folder <- "Blair_data"
@@ -37,6 +37,7 @@ dat <- bind_rows(datList, .id = "Sensor.Location")
 dat<- dat %>%
   select(1:3)
 
+#add colnames
 names(dat)[2:3]<-c("Time","Shift")
 
 #sanity check: shold have 8 letters x 7 reps/letter x 3000 entries = 168000 rows.
@@ -141,9 +142,9 @@ colnames(mergeExpAndCntl)<-
 mergeExpAndCntl <- mergeExpAndCntl %>%
   mutate(CorrectedShift = Shift.Exp - Shift.Cntl)
 
+```
 
-
-
+```{r plotting, message = FALSE, warning = FALSE}
 #plotting
 #the plots Blair made in Prism show time vs shift with different colored lines for each Env ("Sample ID"). She made different plots for each Ab ("Loading Sample ID"")
 
@@ -154,13 +155,40 @@ ggplot(mergeExpAndCntl, aes(x = AdjTime.Exp , y = CorrectedShift ))+
   labs(x = "Time", y = "Background Corrected Shift")+
   scale_color_discrete(name = "Envelope")
 
-
-
-
-
-
-  
 ```
 
 
+```{r make it nice for prism, message = FALSE, warning = FALSE}
+
+#make a new df that only contains the columns that we're going to need for prism. And we don't need the control data
+
+forPrism <- mergeExpAndCntl %>%
+  select(AdjTime.Exp, CorrectedShift, Sample.ID.Exp, Loading.Sample.ID.Exp)%>%
+  arrange(Loading.Sample.ID.Exp)
+
+
+#it appears that this needs to be a character vector for the spread function to work.
+forPrism$Loading.Sample.ID.Exp<-as.character(forPrism$Loading.Sample.ID.Exp)
+
+
+#Make a list of data frames: one for each Ab (i.e. one for each Loading.Sample.ID.Exp)
+
+AbList<-split(forPrism, f = forPrism$Loading.Sample.ID.Exp)
+
+names(AbList)<-unique(forPrism$Loading.Sample.ID.Exp)
+  
+
+
+#Make all the of the data frames wide format
+spreadAll<-lapply(AbList, FUN = spread, key = Sample.ID.Exp, value = CorrectedShift)
+
+
+#write a function to write out all the data frames in the list as individual files.
+
+writeAll<-function(df){
+  write.csv(df, file = paste(unique(df$Loading.Sample.ID.Exp),".csv"))
+}
+
+
+lapply(spreadAll, FUN = writeAll)
 
