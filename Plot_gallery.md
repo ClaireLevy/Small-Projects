@@ -113,3 +113,25 @@ ggplot(Bal26, aes(x = Day, y = RLU))+
 ```
 
 ![](Plot_gallery_files/figure-markdown_github/unnamed-chunk-10-1.png)
+
+Heat map of MSD data
+--------------------
+
+-   Use geom\_tile to make the grid
+
+-   Use `scale_fill_gradient()` and assign the colors I want to the hi low and midpoints
+
+-   Set the midpoint to zero
+
+-   Use `scale_y_discrete()` to make sure the labels have the correct greek letters instead of whatever weird symbols ggplot tries to use.
+
+``` r
+ggplot(merge24And3, aes(x = Donor, y = Assay))+
+  geom_tile(aes(fill = max10fold), color = "gray")+
+  scale_fill_gradient2(low = "green", mid = "white", high = "red", midpoint = 0, name = "log10 Fold Change")+
+  facet_wrap(~Virus, scales = "free_x")+
+  scale_y_discrete(breaks = merge24And3$Assay,labels =merge24And3$Assay)+
+  ggtitle("log fold change of concentrations at 24hrs over 3 hrs")
+```
+
+![](Plot_gallery_files/figure-markdown_github/unnamed-chunk-12-1.png)
