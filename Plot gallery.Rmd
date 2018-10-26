@@ -10,6 +10,7 @@ CD66b+ populations from "plotting neutrophil subsets flow and April-May CyToF" i
 
 ```{r, echo=FALSE,warning=FALSE}
 library(ggplot2)
+library(scales)
 
 load("Plot gallery data/meltCombinedData.Rda")
 ```
@@ -171,4 +172,76 @@ ggplot(merge24And3, aes(x = Donor, y = Assay))+
   facet_wrap(~Virus, scales = "free_x")+
   scale_y_discrete(breaks = merge24And3$Assay,labels =merge24And3$Assay)+
   ggtitle("log fold change of concentrations at 24hrs over 3 hrs")
+```
+
+
+## Scatter plot of MSD data for 3 cytokines
+
+I was trying to make these plots in the same style as some others created (I think) in prism
+
+Data is from "Projects\Herpes study\Thika samples\2016-2017\Thika_CVL_MSD_analysis\oct_2018_plot_for_FH\IL1a_IL1b_IL1RA_plot_for_FH.R"
+
+* Make a  custom theme to create a plain background and put the legend in the top left corner
+
+* Convert RGB colors (guessed from prism) to fractional RGB then HEX
+
+* override the aesthetics set in geom_point to be able to have the dots in the legend bigger than those in the plot, for better visibility.
+
+* Make nice looking exponents by using  labels=trans_format('log10',math_format(10^.x)) from the scales package
+```{r, echo= FALSE, warning=FALSE, message= FALSE}
+
+load("Plot gallery data/CVL_wash.Rda")
+```
+
+
+```{r}
+
+
+
+#here's the colors I want to use. I have the RBG so I will convert to HEX
+#I dont have the fractional RBG, so I need to change my full RBG values to fractional using maxColorValue
+
+
+
+detectable <-rgb(0, 128, 192, maxColorValue = 255)
+below <- rgb( 255, 0, 128, maxColorValue = 255)
+above <- rgb( 251, 189, 47, maxColorValue = 255)
+
+
+
+# plot theme
+
+theme_pres <- theme (
+  axis.text.y = element_text(size = 14),
+  axis.text.x = element_text(size = 14, face = "bold", color = "black"), # black bold text for x axis labels
+  axis.title.x = element_text(size = 14, vjust = -1),#move the title over a little
+  axis.title.y = element_text(size = 14),
+  legend.text = element_text(size = 14),
+  legend.title = element_blank(), #no legend title
+  axis.ticks = element_blank(), # no tick marks 
+  legend.background = element_blank(), #no background color in  the legend box
+  legend.key = element_blank(), #no background behind the symbols in the legend
+  panel.border= element_rect(color = "gray", fill = NA), #add a border around the plot
+  panel.grid.major = element_blank(), # remove grid lines
+  panel.grid.minor = element_blank(),
+  panel.background = element_blank(),#no background color in plot
+  legend.position = c(0.15,0.9) #put the legend on upper left of the the plot
+)
+
+
+
+
+ggplot(dat_no_cntl_no_std_in_range, aes(x = Assay, y = Dilution_corrected_conc))+
+  geom_jitter(aes(color = `adj_detection_labels`))+
+  scale_y_log10(limits = c(0.01, NA),breaks = c(0.1,1, 10,100, 1000,10000, 100000, 1000000), labels=trans_format('log10',math_format(10^.x)))+
+  labs(y = "Quantified cytokine level pg/mL", x = "Cytokine")+
+  theme_pres+
+  scale_color_manual(values = c(above, below, detectable))+
+  guides(color = guide_legend(override.aes = list(size = 4)))
+
+
+
+
+
+
 ```
